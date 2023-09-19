@@ -10,7 +10,6 @@ public class Rental: AggregateRoot
     public required Address OfficeAddress { get; init; }
     public required HashSet<RentalEmployee> RentalEmployees { get; init; }
     public required HashSet<Rent> Rents { get; init; }
-
     protected bool Equals(Rental other)
     {
         return RentalIdentifier == other.RentalIdentifier && OfficeAddress.Equals(other.OfficeAddress);
@@ -51,6 +50,7 @@ public class Rental: AggregateRoot
         if (!client.Validate()) Notification.AddErrors(client.Notification.Errors);;
         
         var car = CarsAvailableOnSide.SingleOrDefault(x => x.CarNumber.Equals(carNumber));
+        //no "remote" rents yet
         if (car is null)
             Notification.AddError(new() { Message = "No such available car in this rental", Source = nameof(Rental)});
         
@@ -59,21 +59,41 @@ public class Rental: AggregateRoot
         CarsAvailableOnSide.Remove(car);
 
         string rentNumber = GenerateRentNumber();
+
+        Rents.Add(new ()
+        {
+            Start = start,
+            End = end,
+            Client = client,
+            RentNumber = rentNumber,
+            Car = car
+        });
+        
+        return rentNumber;
+    }
+
+    public Rent ConfirmRent(string rentNumber)
+    {
+        var rent = Rents.Single(x => x.RentNumber.Equals(rentNumber));
+        //calculate price - in a future, we can implement promotions here.
+        decimal price = (decimal)(rent.End - rent.Start).TotalDays * rent.Car.Price;
+        rent.Confirm(price);
         
         Events.Add(new CarRentOnSide
         {
             RentNumber = rentNumber,
-            FirstName = client.FirstName,
-            LastName = client.LastName,
-            CorrespondencyAddress = client.CorrespondencyAddress,
-            IdNumber = client.IdNumber,
-            IsCompany = client.IsCompany,
+            FirstName = rent.Client.FirstName,
+            LastName = rent.Client.LastName,
+            CorrespondencyAddress = rent.Client.CorrespondencyAddress,
+            IdNumber = rent.Client.IdNumber,
+            IsCompany = rent.Client.IsCompany,
             RentalIdentifier = this.RentalIdentifier,
-            Start = start,
-            End = end,
-            CarNumber = car.CarNumber
+            Start = rent.Start,
+            End = rent.End,
+            CarNumber = rent.Car.CarNumber
         });
-        return rentNumber;
+
+        return rent;
     }
     
     public override bool Validate()

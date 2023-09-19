@@ -24,7 +24,7 @@ public sealed class CarRentProcessSagaManager
         });
     }
 
-    public async Task ChangeState(string newState, string rentNumber, Guid correlationId)
+    public async Task ChangeStateAsync(string newState, string rentNumber, Guid correlationId, bool saveContextChanges = false)
     {
         var state = await _ctx.CarRentProcessStates.SingleOrDefaultAsync(x => x.RentNumber.Equals(rentNumber) && x.CorrelationId.Equals(correlationId));
 
@@ -33,7 +33,7 @@ public sealed class CarRentProcessSagaManager
 
         state.CurrentState = newState;
         state.ChangedDate = DateTime.Now;
-        
-        await _ctx.SaveChangesAsync();
+
+        if(saveContextChanges) await _ctx.SaveChangesAsync();
     }
 }

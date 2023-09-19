@@ -1,6 +1,6 @@
 ﻿using CarRental.BuildingBlocks.ServiceIntegration;
 
-namespace CarRental.ClientsCatalog.Application.IntegrationEvents;
+namespace CarRental.Sales.Application.IntegrationEvents;
 
 public record ClientCheckingProcessFailed : IEvent
 {

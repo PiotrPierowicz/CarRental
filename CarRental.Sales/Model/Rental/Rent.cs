@@ -9,7 +9,14 @@ public class Rent: Entity
     public required DateTime Start { get; init; }
     public required DateTime End { get; init; }
     public required string RentNumber { get; init; }
+    public bool Confirmed { get; private set; }
+    public decimal FinalPrice { get; private set; }
 
+    public void Confirm(decimal finalPrice)
+    {
+        Confirmed = true;
+        FinalPrice = finalPrice;
+    }
     protected bool Equals(Rent other)
     {
         return Client.Equals(other.Client) && Car.Equals(other.Car) && Start.Equals(other.Start) && End.Equals(other.End) && RentNumber == other.RentNumber;
